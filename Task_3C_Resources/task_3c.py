@@ -38,7 +38,7 @@ import zmq
 #####################################################################################
 
 task_1b = __import__('task_1b')
-def perspective_transform(image):
+def perspective_transform(image, ArUco_details_dict, ArUco_corners):
 
     """
     Purpose:
@@ -68,24 +68,20 @@ def perspective_transform(image):
     """   
     warped_image = [] 
 #################################  ADD YOUR CODE HERE  ###############################
-    ArUco_details_dict, ArUco_corners  = task_1b.detect_ArUco_details(image)
+    # ArUco_details_dict, ArUco_corners  = task_1b.detect_ArUco_details(image)
+
     image_cp = numpy.copy(image)
     task_1b.mark_ArUco_image(image_cp, ArUco_details_dict, ArUco_corners)
     cv2.imshow('img_cp', image_cp)
 
-    if len(ArUco_details_dict) == 5:
-        pts = numpy.float32([numpy.array(ArUco_details_dict[1][0])+[10,10],numpy.array(ArUco_details_dict[2][0])+ [-10,10], numpy.array(ArUco_details_dict[3][0]) + [-10,-10], numpy.array(ArUco_details_dict[4][0]) + [10,-10]])
-        # pts = numpy.float32([numpy.array(ArUco_details_dict[1][0]),numpy.array(ArUco_details_dict[2][0]), numpy.array(ArUco_details_dict[3][0]), numpy.array(ArUco_details_dict[4][0])])
-        pts2 = numpy.float32([[512,512],[0,512], [0,0], [512,0]])
-        mat = cv2.getPerspectiveTransform(pts, pts2)
-        warped_image = cv2.warpPerspective(image, mat, [512,512])
-        # cropped = image[ ArUco_details_dict[3][0][1]:ArUco_details_dict[1][0][1] , ArUco_details_dict[3][0][0]:ArUco_details_dict[1][0][0]]
+    # pts = numpy.float32([numpy.array(ArUco_details_dict[1][0])+[10,10],numpy.array(ArUco_details_dict[2][0])+ [-10,10], numpy.array(ArUco_details_dict[3][0]) + [-10,-10], numpy.array(ArUco_details_dict[4][0]) + [10,-10]])
+    pts = numpy.float32([numpy.array(ArUco_details_dict[1][0]),numpy.array(ArUco_details_dict[2][0]), numpy.array(ArUco_details_dict[3][0]), numpy.array(ArUco_details_dict[4][0])])
+    pts2 = numpy.float32([[512,512],[0,512], [0,0], [512,0]])
+    mat = cv2.getPerspectiveTransform(pts, pts2)
+    warped_image = cv2.warpPerspective(image, mat, [512,512])
 
-
-        # cv2.imshow('cropped', cropped)
-        cv2.imshow('img', warped_image)
-    else: 
-        print('5 not found')
+    cv2.imshow('img', warped_image)
+    
 ######################################################################################
 
     return warped_image
@@ -215,6 +211,26 @@ def main():
     alphabot = sim.getObject('/alphabot')
     sim.setObjectOrientation(alphabot,sim.getObject('/Arena'),[0,-89.5,0])
     sim.setObjectOrientation(alphabot,alphabot,[-89.5,0,0])
+
+    #detect all aruco initially
+    while True: 
+        ret, frame = cam.read()
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+        
+        try:
+            ArUco_details_dict, ArUco_corners  = task_1b.detect_ArUco_details(frame)
+            image_cp = numpy.copy(frame)
+            task_1b.mark_ArUco_image(image_cp, ArUco_details_dict, ArUco_corners)
+            cv2.imshow('img_cp', image_cp)
+
+            if len(ArUco_details_dict) == 5:
+                break
+
+        except :
+            print('Detecting All arucos')
+
+
     la = 179
     while True: 
         ret, frame = cam.read()
@@ -223,7 +239,7 @@ def main():
         
         
         try:
-            Tframe = perspective_transform(frame)  
+            Tframe = perspective_transform(frame, ArUco_details_dict, ArUco_corners)  
             scene_parameters = transform_values(Tframe)
             set_values(sim,scene_parameters)
 
@@ -233,7 +249,7 @@ def main():
 
         # cv2.imshow('aruco', frame)  
         
-        cv2.waitKey(1)
+        cv2.waitKey(1)  
 
     cv2.imshow('frame', frame)
 
