@@ -181,6 +181,9 @@ def hsv_mask(img):
     mask = cv2.inRange(hsv, lower_hsv, higher_hsv)
 
     frame = cv2.bitwise_and(img, img, mask=mask)
+    kernel = np.ones((5,5),np.uint8)
+    frame = cv2.erode(frame, kernel, iterations=1)
+
     return frame
 
 def process_img(img):
@@ -263,7 +266,7 @@ def detect_line(img, thresh):
 
 def detect_node(mask):
     mask = np.where(mask == 0 , mask , 1)
-    if mask.sum() > 5000:
+    if mask.sum() > 2500:
         return True
     return False
     
