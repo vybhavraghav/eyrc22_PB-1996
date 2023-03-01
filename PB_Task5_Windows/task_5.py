@@ -147,7 +147,8 @@ def task_5_implementation(sim, arena_parameters):
 			for i,package in enumerate(medicine_packages):
 				if package[:2]==[shop_nodes[node],colour]:
 					picked=medicine_packages.pop(i)
-					picked_up.append(picked[1]+", "+picked[2]+', ')
+					pb_theme.pick_package(sim, i, picked)
+					picked_up.append(picked)
 			
 			pb_theme.send_message_via_socket(connection_2, picked[1])
 			
@@ -215,9 +216,11 @@ def task_5_implementation(sim, arena_parameters):
 			
 			pb_theme.send_message_via_socket(connection_2, str(index))
 			pb_theme.receive_message_via_socket(connection_2)
-			print("DELIVERED AT: ",picked_up[index], node)
+			print("DELIVERED AT: ",picked_up[index][1]+", "+picked_up[index][2]+', ', node)
 			deli.remove(node)
 			print(deli)
+			print(picked_up[index])
+			pb_theme.drop_packages(sim, picked_up[index])
 			start = node
 			time.sleep(1)
 

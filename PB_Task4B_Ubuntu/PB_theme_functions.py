@@ -202,15 +202,19 @@ Add functions written in Task 2B for reading QR code from
 CoppeliaSim arena in this section
 """
 
+
+
 def getVision(sim):
-	vs = sim.getObject('/Diff_Drive_Bot/vision_sensor')
+	vs = sim.getObject('/vision_sensor')
 
 	img, rX, rY = sim.getVisionSensorCharImage(vs)
 	img = np.frombuffer(img, dtype = np.uint8).reshape(rX,rY,3)
 	img = cv2.flip(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), 0)
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	gray = cv2.blur(gray, (50,100))
+	# cv2.imshow('blur', gray)
 	_, gray = cv2.threshold(gray, 225, 255, cv2.THRESH_BINARY_INV)
+	# cv2.imshow('thresh',gray)
 
 	return img, gray
 
@@ -242,11 +246,55 @@ def read_qr_code(sim):
 
 	img, gray  = getVision(sim)
 	m = decode(img)[0][0]
-	qr_message = str(m).strip("'b")
+	# print(m, type(m))
+	qr_message = json.loads(m.decode('utf-8'))
+	cv2.waitKey(5)
 
 	##################################################
 
 	return qr_message
+
+
+
+
+
+def activateQr(sim, checkpoint):
+	# # Retrieve the handle of the Arena_dummy scene object.
+	qr_code = sim.getObject("/Arena/qr_plane") 
+
+	# ## Retrieve the handle of the child script attached to the Arena_dummy scene object.
+	# childscript_handle = sim.getScript(sim.scripttype_childscript, arena_dummy_handle, "")
+
+	# ## Call the activate_qr_code() function defined in the child script to make the QR code visible at checkpoint E
+	# sim.callScriptFunction("activate_qr_code", childscript_handle, checkpoint)
+
+	sim.setObjectInt32Param(qr_code, sim.objintparam_visibility_layer, 1)
+
+
+
+
+def deactivateQr(sim, checkpoint):
+	## Retrieve the handle of the Arena_dummy scene object.
+	qr_code = sim.getObject("/Arena/qr_plane") 
+
+	# ## Retrieve the handle of the child script attached to the Arena_dummy scene object.
+	# childscript_handle = sim.getScript(sim.scripttype_childscript, arena_dummy_handle, "")
+
+	# ## Call the activate_qr_code() function defined in the child script to make the QR code visible at checkpoint E
+	# sim.callScriptFunction("deactivate_qr_code", childscript_handle, checkpoint)
+
+	sim.setObjectInt32Param(qr_code, sim.objintparam_visibility_layer, 0)
+
+
+def deliverPackage(sim, checkpoint, package):
+	## Retrieve the handle of the Arena_dummy scene object.
+	arena_dummy_handle = sim.getObject("/Arena") 
+
+	# ## Retrieve the handle of the child script attached to the Arena_dummy scene object.
+	# childscript_handle = sim.getScript(sim.scripttype_childscript, arena_dummy_handle, "")
+
+	# ## Deliver package_1 at checkpoint E
+	# sim.callScriptFunction("deliver_package", childscript_handle, package, checkpoint)
 
 ##############################################################
 ##############################################################
@@ -893,6 +941,24 @@ def get_PN():
     
 ##############################################################
 
+def pick_package(sim, pack_no, package):
+	
+	package_handle = sim.getObject('./Arena/'+ package[1]+'_'+package[2])
+	alphabot = sim.getObject('./alphabot')
+	sim.sim.setObjectParent(package_handle,alphabot, True)
+	sim.setObjectPosition(package_handle ,alphabot ,[2.7497e-02,4.9961e-04+ pack_no*0.010,2.1111e-02 ])
+
+
+def drop_packages(sim, package):
+	package[1]+'_'+package[2]
+	package_handle = sim.getObject('./Arena/'+ package[1]+'_'+package[2])
+	arena = sim.getObject('./Arena')
+	alphabot = sim.getObject('./alphabot')
+	sim.setObjectParent(package_handle,arena, True)
+	sim.setObjectPosition(package_handle ,alphabot ,[+1.7545e-02,-3.7388e-02,-3.2459e-02 ])
+
+	
+
 def place_packages(medicine_package_details, sim, all_models):
     """
 	Purpose:
@@ -1172,3 +1238,199 @@ def place_vertical_barricade(vertical_roads_under_construction, sim, all_models)
 
 ##############################################################
 ##############################################################
+
+
+
+def perspective_transform(image):
+
+    """
+    Purpose:
+    ---
+    This function takes the image as an argument and returns the image after 
+    applying perspective transform on it. Using this function, you should
+    crop out the arena from the full frame you are receiving from the 
+    overhead camera feed.
+
+    HINT:
+    Use the ArUco markers placed on four corner points of the arena in order
+    to crop out the required portion of the image.
+
+    Input Arguments:
+    ---
+    `image` :	[ numpy array ]
+            numpy array of image returned by cv2 library 
+
+    Returns:
+    ---
+    `warped_image` : [ numpy array ]
+            return cropped arena image as a numpy array
+    
+    Example call:
+    ---
+    warped_image = perspective_transform(image)
+    """   
+    warped_image = [] 
+#################################  ADD YOUR CODE HERE  ###############################
+    ArUco_details_dict, ArUco_corners  = task_1b.detect_ArUco_details(image)
+    image_cp = numpy.copy(image)
+    task_1b.mark_ArUco_image(image_cp, ArUco_details_dict, ArUco_corners)
+    cv2.imshow('img_cp', image_cp)
+
+    if len(ArUco_details_dict) == 5:
+        pts = numpy.float32([numpy.array(ArUco_details_dict[1][0])+[10,10],numpy.array(ArUco_details_dict[2][0])+ [-10,10], numpy.array(ArUco_details_dict[3][0]) + [-10,-10], numpy.array(ArUco_details_dict[4][0]) + [10,-10]])
+        # pts = numpy.float32([numpy.array(ArUco_details_dict[1][0]),numpy.array(ArUco_details_dict[2][0]), numpy.array(ArUco_details_dict[3][0]), numpy.array(ArUco_details_dict[4][0])])
+        pts2 = numpy.float32([[512,512],[0,512], [0,0], [512,0]])
+        mat = cv2.getPerspectiveTransform(pts, pts2)
+        warped_image = cv2.warpPerspective(image, mat, [512,512])
+        # cropped = image[ ArUco_details_dict[3][0][1]:ArUco_details_dict[1][0][1] , ArUco_details_dict[3][0][0]:ArUco_details_dict[1][0][0]]
+
+
+        # cv2.imshow('cropped', cropped)
+        cv2.imshow('img', warped_image)
+    else: 
+        print('5 not found')
+######################################################################################
+
+    return warped_image
+
+def transform_values(image):
+
+    """
+    Purpose:
+    ---
+    This function takes the image as an argument and returns the 
+    position and orientation of the ArUco marker (with id 5), in the 
+    CoppeliaSim scene.
+
+    Input Arguments:
+    ---
+    `image` :	[ numpy array ]
+            numpy array of image returned by camera
+
+    Returns:
+    ---
+    `scene_parameters` : [ list ]
+            a list containing the position and orientation of ArUco 5
+            scene_parameters = [c_x, c_y, c_angle] where
+            c_x is the transformed x co-ordinate [float]
+            c_y is the transformed y co-ordinate [float]
+            c_angle is the transformed angle [angle]
+    
+    HINT:
+        Initially the image should be cropped using perspective transform 
+        and then values of ArUco (5) should be transformed to CoppeliaSim
+        scale.
+    
+    Example call:
+    ---
+    scene_parameters = transform_values(image)
+    """   
+    
+    global la , scene_parameters
+    scene_parameters = []
+#################################  ADD YOUR CODE HERE  ###############################
+    # try:
+    # cv2.imshow('scene', image)
+    ArUco_details_dict, ArUco_corners  = task_1b.detect_ArUco_details(image)
+    if 5 in ArUco_details_dict.keys():
+        x,y = ArUco_details_dict[5][0]
+        transform_const = 1.91/512
+        x1,y1 = x*transform_const, y*transform_const
+
+        a= ArUco_details_dict[5][1]
+        print(a)
+        if a >0:
+            a = -(180-a)
+        elif a < 0 :
+            a = (180+a)
+        else:
+            a = 180
+        # print(a)
+
+        a = a*numpy.pi/180
+
+
+        scene_parameters = [[0.955 - x1, y1 - 0.955, 0.0325], [a - la, 0, 0]] #
+        la = a
+        # print(scene_parameters) 
+    else:
+        print('Missing')
+    # except: 
+    #     print('error')
+
+######################################################################################
+
+    return scene_parameters
+
+
+def set_values(scene_parameters):
+    """
+    Purpose:
+    ---
+    This function takes the scene_parameters, i.e. the transformed values for
+    position and orientation of the ArUco marker, and sets the position and 
+    orientation in the CoppeliaSim scene.
+
+    Input Arguments:
+    ---
+    `scene_parameters` :	[ list ]
+            list of co-ordinates and orientation obtained from transform_values()
+            function
+
+    Returns:
+    ---
+    None
+
+    HINT:
+        Refer Regular API References of CoppeliaSim to find out functions that can
+        set the position and orientation of an object.
+    
+    Example call:
+    ---
+    set_values(scene_parameters)
+    """   
+    aruco_handle = sim.getObject('/alphabot')
+    arena_handle = sim.getObject('/Arena')
+    print('SP:', scene_parameters)
+#################################  ADD YOUR CODE HERE  ###############################
+
+    sim.setObjectPosition(aruco_handle,sim.handle_world ,scene_parameters[0])
+    sim.setObjectOrientation(aruco_handle,aruco_handle,scene_parameters[1])
+######################################################################################
+
+    return None
+run = True
+def start_emulation():
+	global run
+	run = True
+	client = RemoteAPIClient()
+	sim = client.getObject('sim')
+
+#################################  ADD YOUR CODE HERE  ################################
+    
+    
+
+	cam = cv2.VideoCapture('http://192.168.1.195:4747/video')
+	la = 0
+	while run:
+		ret, frame = cam.read()
+		frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+		
+		
+		try:
+			Tframe = perspective_transform(frame)  
+			scene_parameters = transform_values(Tframe)
+			set_values(scene_parameters)
+
+		except:
+			pass
+
+		# cv2.imshow('aruco', frame)  
+		
+		cv2.waitKey(1)
+
+	# cv2.imshow('frame', frame)
+
+
+#######################################################################################
