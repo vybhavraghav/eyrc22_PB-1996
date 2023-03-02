@@ -237,12 +237,12 @@ def followLine(message):
 
 if __name__ == "__main__":
 
-        host = "192.168.21.35"
-        port = 3565
+        host = "192.168.143,35"
+        port = 4949
 
         gndPin=23
 
-        pins={"redPin1":17,"greenPin1":5,"bluePin1":19,"redPin2":16,"greenPin2":25,"bluePin2":24} # add the other pins
+        pins={"redPin1":17,"greenPin1":5,"bluePin1":19,"redPin2":16,"greenPin2":25,"bluePin2":24, 'redPin3':27, 'greenPin3':23, "bluePin3":22 } # add the other pins
         lrgb=[]
 
         
