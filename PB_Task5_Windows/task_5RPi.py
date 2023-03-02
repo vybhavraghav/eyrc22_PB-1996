@@ -167,9 +167,9 @@ def rgb_led_setup(R,G,B):
     GPIO.setup(R,GPIO.OUT)
     GPIO.setup(B,GPIO.OUT)
     GPIO.setup(G,GPIO.OUT)
-    GPIO.setup(gndPin, GPIO.OUT)
-    
-    GPIO.output(gndPin, GPIO.LOW)
+#     GPIO.setup(gndPin, GPIO.OUT)
+#     
+#     GPIO.output(gndPin, GPIO.LOW)
     Red = GPIO.PWM(R, 2000)
     Green = GPIO.PWM(G, 2000)
     Blue = GPIO.PWM(B, 2000)
@@ -237,10 +237,10 @@ def followLine(message):
 
 if __name__ == "__main__":
 
-        host = "192.168.143,35"
-        port = 4949
+        host = "192.168.141.35"
+        port = 5050
 
-        gndPin=23
+        
 
         pins={"redPin1":17,"greenPin1":5,"bluePin1":19,"redPin2":16,"greenPin2":25,"bluePin2":24, 'redPin3':27, 'greenPin3':23, "bluePin3":22 } # add the other pins
         lrgb=[]
@@ -250,7 +250,7 @@ if __name__ == "__main__":
         
 
         ## PWM values to be set for rgb led to display different colors
-        pwm_values = {"Red": (255, 0, 0), "Blue": (0, 0, 255), "Green": (0, 255, 0), "Orange": (255, 35, 0), "Pink": (255, 0, 122), "Sky Blue": (0, 100, 100)}
+        pwm_values = {"Red": (255, 0, 0), "Blue": (0, 0, 255), "Green": (0, 255, 0), "Orange": (255, 35, 0), "Pink": (255, 0, 122), "Skyblue": (0, 100, 100)}
 
 
         ## Configure rgb led pins
@@ -274,21 +274,33 @@ if __name__ == "__main__":
         
     
         counter = receive_message_via_socket(client)
-        for count in range(counter):
+        print(".")
+        for count in range(int(counter)):
 
             # Pick Up
-            message = receive_message_via_socket(client)
+            
             for i in range(3):
-                if message == 'break':
+                message = receive_message_via_socket(client)
+                print(message)
+                if message=='b':
                     break
-                followLine(message)
+#                 if message!='stop':
+#                     followLine(message)
+                
+                
+                time.sleep(5)
+                send_message_via_socket(client, 'Reached')
                 picked = receive_message_via_socket(client)
+                
+                print(".")
                 print(picked)
                 rgb_led_set_color(i, picked)
                 send_message_via_socket(client, 'RGB_ON')
                 print(i,picked)
 
             length = receive_message_via_socket(client)
+            send_message_via_socket(client, 'fuck')
+            print(length)
 
             for i in range(int(length)):
 
@@ -296,12 +308,12 @@ if __name__ == "__main__":
                 # message = receive_message_via_socket(client)
                 # followLine(message)
                 index = receive_message_via_socket(client)
-                rgb_off(index)
+                print(".")
+                rgb_off(int(index))
                 send_message_via_socket(client, 'RGB_OFF')
 
 
         
         
         
-
 
