@@ -260,7 +260,8 @@ def read_qr_code(sim):
 
 def activateQr(sim, checkpoint):
 	# # Retrieve the handle of the Arena_dummy scene object.
-	qr_code = sim.getObject("/Arena/qr_plane") 
+	qr_dick={"B2":1,"C2":2,"D2":3,"E2":4,"F2":5}
+	qr_code = sim.getObject("/Arena/qr_plane_"+str(qr_dick[checkpoint])) 
 
 	# ## Retrieve the handle of the child script attached to the Arena_dummy scene object.
 	# childscript_handle = sim.getScript(sim.scripttype_childscript, arena_dummy_handle, "")
@@ -275,7 +276,8 @@ def activateQr(sim, checkpoint):
 
 def deactivateQr(sim, checkpoint):
 	## Retrieve the handle of the Arena_dummy scene object.
-	qr_code = sim.getObject("/Arena/qr_plane") 
+	qr_dick={"B2":1,"C2":2,"D2":3,"E2":4,"F2":5}
+	qr_code = sim.getObject("/Arena/qr_plane_"+str(qr_dick[checkpoint])) 
 
 	# ## Retrieve the handle of the child script attached to the Arena_dummy scene object.
 	# childscript_handle = sim.getScript(sim.scripttype_childscript, arena_dummy_handle, "")
@@ -945,17 +947,17 @@ def pick_package(sim, pack_no, package):
 	
 	package_handle = sim.getObject('./Arena/'+ package[1]+'_'+package[2])
 	alphabot = sim.getObject('./alphabot')
-	sim.sim.setObjectParent(package_handle,alphabot, True)
-	sim.setObjectPosition(package_handle ,alphabot ,[2.7497e-02,4.9961e-04+ pack_no*0.010,2.1111e-02 ])
+	sim.setObjectParent(package_handle,alphabot, True)
+	sim.setObjectPosition(package_handle ,alphabot ,[2.7497e-02,4.9961e-04+ pack_no*0.010,+4.6080e-02 ])
 
 
 def drop_packages(sim, package):
 	package[1]+'_'+package[2]
-	package_handle = sim.getObject('./Arena/'+ package[1]+'_'+package[2])
+	package_handle = sim.getObject('./alphabot/'+ package[1]+'_'+package[2])
 	arena = sim.getObject('./Arena')
 	alphabot = sim.getObject('./alphabot')
 	sim.setObjectParent(package_handle,arena, True)
-	sim.setObjectPosition(package_handle ,alphabot ,[+1.7545e-02,-3.7388e-02,-3.2459e-02 ])
+	sim.setObjectPosition(package_handle ,alphabot ,[+1.7545e-02,-3.7388e-02,-3.2459e-02])
 
 	
 
