@@ -207,7 +207,7 @@ def main():
     
     
 
-    cam = cv2.VideoCapture('http://192.168.1.195:4747/video') # change the camera option accordingly
+    cam = cv2.VideoCapture('http://192.168.1.14:8080/video') # change the camera option accordingly
     alphabot = sim.getObject('/alphabot')
     sim.setObjectOrientation(alphabot,sim.getObject('/Arena'),[0,-89.5,0])
     sim.setObjectOrientation(alphabot,alphabot,[-89.5,0,0])
@@ -216,7 +216,8 @@ def main():
     while True: 
         ret, frame = cam.read()
         frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-
+        cv2.imshow('frame', frame)
+        cv2.waitKey(1) 
         
         try:
             ArUco_details_dict, ArUco_corners  = task_1b.detect_ArUco_details(frame)
