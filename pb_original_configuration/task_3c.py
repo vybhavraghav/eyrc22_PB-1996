@@ -131,14 +131,14 @@ def transform_values(image):
         x1,y1 = x*transform_const, y*transform_const
 
         a= ArUco_details_dict[5][1]
-        print(a)
+        # print(a)
         if a >0:
             a = -(180-a)
         elif a < 0 :
             a = (180+a)
         else:
             a = 180
-        print(a)
+        # print(a)
 
         a = a*numpy.pi/180
 
@@ -184,7 +184,7 @@ def set_values(sim,scene_parameters):
     """   
     aruco_handle = sim.getObject('/alpha_bot')
     arena_handle = sim.getObject('/Arena')
-    print('SP:', scene_parameters)
+    # print('SP:', scene_parameters)
 #################################  ADD YOUR CODE HERE  ###############################
 
     sim.setObjectPosition(aruco_handle,sim.handle_world ,scene_parameters[0])
@@ -194,10 +194,9 @@ def set_values(sim,scene_parameters):
 
     return None
 
-def main():
+def main(sim):
     global la
-    client = RemoteAPIClient()
-    sim = client.getObject('sim')
+    
     # alphabot = sim.getObject('/alphabot')
     # sim.setObjectOrientation(alphabot,sim.getObject('/Arena'),[0,-89.5,0])
     # sim.setObjectOrientation(alphabot,alphabot,[-89.5,0,0])
@@ -230,7 +229,8 @@ def main():
             if len(ArUco_details_dict) == 5:
                 break
 
-        except :
+        except Exception as e :
+            print(e)
             print('Detecting All arucos')
 
 
@@ -261,7 +261,8 @@ def main():
 
 
 if __name__ == '__main__':
-    
-    main()
+    client = RemoteAPIClient()
+    sim = client.getObject('sim')
+    main(sim)
 
     

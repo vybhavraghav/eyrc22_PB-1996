@@ -949,20 +949,20 @@ def get_PN():
 def pick_package(sim, pack_no, package):
 	
 	package_handle = sim.getObject('./Arena/'+ package[1]+'_'+package[2])
-	alphabot = sim.getObject('./alpha_bot')
+	alphabot = sim.getObject('./alpha_bot/storage')
 	sim.setObjectParent(package_handle,alphabot, True)
-	sim.setObjectPosition(package_handle ,alphabot ,[2.7497e-02,4.9961e-04+ pack_no*0.010,+4.6080e-02 ])
+	sim.setObjectPosition(package_handle ,alphabot ,[+8.3557e-03,+4.7703e-03,+3.8551e-023+ pack_no*0.5000e-02 ])
 
 
 def drop_packages(sim, package):
 	package[1]+'_'+package[2]
-	package_handle = sim.getObject('./alpha_bot/'+ package[1]+'_'+package[2])
+	package_handle = sim.getObject('./alpha_bot/storage/'+ package[1]+'_'+package[2])
 	arena = sim.getObject('./Arena')
 	alphabot = sim.getObject('./alpha_bot')
 	sim.setObjectParent(package_handle,arena, True)
 	sim.setObjectPosition(package_handle ,alphabot ,[+1.7545e-02,-3.7388e-02,-3.2459e-02])
 
-	
+
 
 def place_packages(medicine_package_details, sim, all_models):
     """
@@ -1246,7 +1246,7 @@ def place_vertical_barricade(vertical_roads_under_construction, sim, all_models)
 
 
 
-def perspective_transform(image):
+def perspective_transform(image, ArUco_details_dict, ArUco_corners):
 
     """
     Purpose:
@@ -1276,24 +1276,20 @@ def perspective_transform(image):
     """   
     warped_image = [] 
 #################################  ADD YOUR CODE HERE  ###############################
-    ArUco_details_dict, ArUco_corners  = task_1b.detect_ArUco_details(image)
-    image_cp = numpy.copy(image)
+    # ArUco_details_dict, ArUco_corners  = task_1b.detect_ArUco_details(image)
+
+    image_cp = np.copy(image)
     task_1b.mark_ArUco_image(image_cp, ArUco_details_dict, ArUco_corners)
-    cv2.imshow('img_cp', image_cp)
+    # cv2.imshow('img_cp', image_cp)
 
-    if len(ArUco_details_dict) == 5:
-        pts = numpy.float32([numpy.array(ArUco_details_dict[1][0])+[10,10],numpy.array(ArUco_details_dict[2][0])+ [-10,10], numpy.array(ArUco_details_dict[3][0]) + [-10,-10], numpy.array(ArUco_details_dict[4][0]) + [10,-10]])
-        # pts = numpy.float32([numpy.array(ArUco_details_dict[1][0]),numpy.array(ArUco_details_dict[2][0]), numpy.array(ArUco_details_dict[3][0]), numpy.array(ArUco_details_dict[4][0])])
-        pts2 = numpy.float32([[512,512],[0,512], [0,0], [512,0]])
-        mat = cv2.getPerspectiveTransform(pts, pts2)
-        warped_image = cv2.warpPerspective(image, mat, [512,512])
-        # cropped = image[ ArUco_details_dict[3][0][1]:ArUco_details_dict[1][0][1] , ArUco_details_dict[3][0][0]:ArUco_details_dict[1][0][0]]
+    pts = np.float32([np.array(ArUco_details_dict[1][0])+[10,10],np.array(ArUco_details_dict[2][0])+ [-10,10], np.array(ArUco_details_dict[3][0]) + [-10,-10], np.array(ArUco_details_dict[4][0]) +[10,-10]])
+    # pts = np.float32([np.array(ArUco_details_dict[1][0]),np.array(ArUco_details_dict[2][0]), np.array(ArUco_details_dict[3][0]), np.array(ArUco_details_dict[4][0])])
+    pts2 = np.float32([[512,512],[0,512], [0,0], [512,0]])
+    mat = cv2.getPerspectiveTransform(pts, pts2)
+    warped_image = cv2.warpPerspective(image, mat, [512,512])
 
-
-        # cv2.imshow('cropped', cropped)
-        cv2.imshow('img', warped_image)
-    else: 
-        print('5 not found')
+    cv2.imshow('img', warped_image)
+    
 ######################################################################################
 
     return warped_image
@@ -1343,7 +1339,7 @@ def transform_values(image):
         x1,y1 = x*transform_const, y*transform_const
 
         a= ArUco_details_dict[5][1]
-        print(a)
+        # print(a)
         if a >0:
             a = -(180-a)
         elif a < 0 :
@@ -1352,14 +1348,15 @@ def transform_values(image):
             a = 180
         # print(a)
 
-        a = a*numpy.pi/180
+        a = a*np.pi/180
 
 
         scene_parameters = [[0.955 - x1, y1 - 0.955, 0.0325], [a - la, 0, 0]] #
         la = a
         # print(scene_parameters) 
     else:
-        print('Missing')
+	    pass
+        # print('Missing')
     # except: 
     #     print('error')
 
@@ -1368,7 +1365,7 @@ def transform_values(image):
     return scene_parameters
 
 
-def set_values(scene_parameters):
+def set_values(sim,scene_parameters):
     """
     Purpose:
     ---
@@ -1396,46 +1393,108 @@ def set_values(scene_parameters):
     """   
     aruco_handle = sim.getObject('/alpha_bot')
     arena_handle = sim.getObject('/Arena')
-    print('SP:', scene_parameters)
+    # print('SP:', scene_parameters)
 #################################  ADD YOUR CODE HERE  ###############################
 
     sim.setObjectPosition(aruco_handle,sim.handle_world ,scene_parameters[0])
     sim.setObjectOrientation(aruco_handle,aruco_handle,scene_parameters[1])
+    # sim.setObjectOrientation(alphabot,sim.handle_world,[-90,0,90])
 ######################################################################################
 
     return None
+
+
 run = True
+la = 179
+
 def start_emulation():
 	global run
 	run = True
-	client = RemoteAPIClient()
-	sim = client.getObject('sim')
-
+	global la
+    
+    # alphabot = sim.getObject('/alphabot')
+    # sim.setObjectOrientation(alphabot,sim.getObject('/Arena'),[0,-89.5,0])
+    # sim.setObjectOrientation(alphabot,alphabot,[-89.5,0,0])
+    
+    
 #################################  ADD YOUR CODE HERE  ################################
     
     
+	client = RemoteAPIClient()
+	sim = client.getObject('sim')
 
-	cam = cv2.VideoCapture('http://192.168.1.195:4747/video')
-	la = 0
-	while run:
+	cam = cv2.VideoCapture('http://192.168.135.240:8080/video') # change the camera option accordingly
+	
+
+	alphabot = sim.getObject('/alpha_bot')
+	
+
+	sim.setObjectOrientation(alphabot,sim.getObject('/Arena'),[0,-89.5,0])
+	
+
+	sim.setObjectOrientation(alphabot,alphabot,[-89.5,0,0])
+	
+
+
+	#detect all aruco initially
+	while True: 
+		
+		ret, frame = cam.read()
+		frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+		# frame = cv2.resize(frame, (480,720))
+		cv2.imshow('frame', frame)
+		cv2.waitKey(1) 
+		
+		try:
+			ArUco_details_dict, ArUco_corners  = task_1b.detect_ArUco_details(frame)
+			image_cp = np.copy(frame)
+			# image_cp = cv2.resize(image_cp, (480,0))
+			task_1b.mark_ArUco_image(image_cp, ArUco_details_dict, ArUco_corners)
+			cv2.imshow('frame_cp', image_cp)
+
+			if len(ArUco_details_dict) == 5:
+				break
+
+		except Exception as e :
+			print(e)
+			print('Detecting All arucos')
+
+
+	la = 179
+	while True: 
+		
 		ret, frame = cam.read()
 		frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
 		
 		
 		try:
-			Tframe = perspective_transform(frame)  
+			Tframe = perspective_transform(frame, ArUco_details_dict, ArUco_corners)  
 			scene_parameters = transform_values(Tframe)
-			set_values(scene_parameters)
+			if not run:
+				continue
+			set_values(sim,scene_parameters)
 
-		except:
+		except Exception as e:
+			# print(e)
 			pass
 
 		# cv2.imshow('aruco', frame)  
 		
-		cv2.waitKey(1)
-
-	# cv2.imshow('frame', frame)
+		cv2.waitKey(1)  
 
 
 #######################################################################################
+# client = RemoteAPIClient()
+# sim = client.getObject('sim')
+task_1b = __import__('task_1b')
+# emul = Thread(target = start_emulation, args=[sim])
+# emul.start()
+# # start_emulation(sim)
+# time.sleep(5)
+# run = False
+# print(1)
+# time.sleep(10)
+# print(2)
+# run = True
+# time.sleep(5)

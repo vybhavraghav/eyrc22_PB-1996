@@ -30,6 +30,7 @@ import socket
 import time
 import os, sys
 from zmqRemoteApi import RemoteAPIClient
+from threading import Thread
 import traceback
 import zmq
 import numpy as np
@@ -99,6 +100,9 @@ def task_6_implementation(sim,arena_parameters):
 
 
 	##################	ADD YOUR CODE HERE	##################
+
+	emul = Thread(target = pb_theme.start_emulation)
+	emul.start()
 	medicine_packages=arena_parameters['medicine_packages']
 
 	nodes_shop = {'Shop_1':'B2','Shop_2':'C2','Shop_3':'D2','Shop_4':'E2','Shop_5':'F2'}
@@ -136,8 +140,8 @@ def task_6_implementation(sim,arena_parameters):
 				break
 
 			PN = { nodes_shop[detail[0]] for detail in  medicine_packages}
-			end_nodes=PN
-			node , moves, orientation =nearest_nodes(start, end_nodes,  arena_parameters, orientation)
+			# end_nodes=PN
+			node , moves, orientation =nearest_nodes(start, PN,  arena_parameters, orientation)
 			# print(moves)
 			# send path to RPi
 			path = ''
@@ -148,7 +152,7 @@ def task_6_implementation(sim,arena_parameters):
 			pb_theme.send_message_via_socket(connection_2,path )
 			# print(".")
 			message = pb_theme.receive_message_via_socket(connection_2)
-			# print(message)
+			print(message)
 			colour=pack[shop_nodes[node]].pop(0)
 	
 		
@@ -162,45 +166,50 @@ def task_6_implementation(sim,arena_parameters):
 			# print(".")
 			
 			# print("PICKED UP: ",picked[1],",",picked[2])
-			pb_theme.receive_message_via_socket(connection_2)
+			message=pb_theme.receive_message_via_socket(connection_2)
+			print(message)
 			print("PICKED UP: ",picked[1],",",picked[2])
 			# print("#############")
 			# print(picked)
 			# print("###################")
 			start=node
 			# print(node)
+
+			pb_theme.run = False
+
 			alphabot = sim.getObject('/alpha_bot')
 			pb_theme.activateQr(sim,node)
 			#setting robot position
 			if node=="F2":
 				sim.setObjectOrientation(alphabot,sim.getObject('/Arena'),[0,-89.5,0])
 				sim.setObjectOrientation(alphabot,alphabot,[-89.5,0,0])
-				sim.setObjectPosition(alphabot,sim.handle_world ,[-8.8900e-01,-4.3361e-01,+3.2500e-02])
+				sim.setObjectPosition(alphabot,sim.handle_world ,[-8.8900e-01,-4.4960e-01,+3.2500e-02])
 			elif node=="E2": 
 				sim.setObjectOrientation(alphabot,sim.getObject('/Arena'),[0,-89.5,0])
 				sim.setObjectOrientation(alphabot,alphabot,[-89.5,0,0])
-				sim.setObjectPosition(alphabot,sim.handle_world ,[-5.3673e-01,-4.3434e-01,+3.2500e-02])
+				sim.setObjectPosition(alphabot,sim.handle_world ,[-5.3673e-01,-4.4960e-01,+3.2500e-02])
 			elif node=="D2": 
 				sim.setObjectOrientation(alphabot,sim.getObject('/Arena'),[0,-89.5,0])
 				sim.setObjectOrientation(alphabot,alphabot,[-89.5,0,0])
-				sim.setObjectPosition(alphabot,sim.handle_world ,[-1.7773e-01,-4.3134e-01,+3.2500e-02])
+				sim.setObjectPosition(alphabot,sim.handle_world ,[-1.7773e-01,-4.4960e-01,+3.2500e-02])
 			elif node=="C2": 
 				sim.setObjectOrientation(alphabot,sim.getObject('/Arena'),[0,-89.5,0])
 				sim.setObjectOrientation(alphabot,alphabot,[-89.5,0,0])
-				sim.setObjectPosition(alphabot,sim.handle_world ,[+1.7227e-01,-4.3361e-01,+3.2459e-02])
+				sim.setObjectPosition(alphabot,sim.handle_world ,[+1.7227e-01,-4.4960e-01,+3.2459e-02])
 			elif node=="B2": 
 				sim.setObjectOrientation(alphabot,sim.getObject('/Arena'),[0,-89.5,0])
 				sim.setObjectOrientation(alphabot,alphabot,[-89.5,0,0])
-				sim.setObjectPosition(alphabot,sim.handle_world ,[+5.3173e-01,-4.3361e-01,+3.2459e-02])
-			# time.sleep(1)
-			while True:
-				try:
-					qr_message = pb_theme.read_qr_code(sim)		
-				except Exception as e:
-					print(e)
-				finally:
-					break																																		
-			pb_theme.deactivateQr(sim, node)
+				sim.setObjectPosition(alphabot,sim.handle_world ,[+5.3173e-01,-4.4960e-01,+3.2459e-02])
+			# time.sleep(3)
+			# while True:
+			# 	try:
+			qr_message = pb_theme.read_qr_code(sim)
+			pb_theme.run = True		
+			# 	except Exception as e:
+			# 		print(e)
+			# 	finally:
+			# 		break																																		
+			# pb_theme.deactivateQr(sim, node)
 			# print(qr_message)
 
 			# # for i in qr_message.keys():
@@ -237,14 +246,17 @@ def task_6_implementation(sim,arena_parameters):
 			print(node)
 			index=delicopy.index(node)
 			pb_theme.receive_message_via_socket(connection_2)
-			# print(message)
+			print(message)
 			pb_theme.send_message_via_socket(connection_2, str(index))
 			
-			pb_theme.receive_message_via_socket(connection_2)
+			message = pb_theme.receive_message_via_socket(connection_2)
+			print(message)
+			time.sleep(3)
 			print("DELIVERED AT: ",picked_up[index][1]+", "+picked_up[index][2]+', ', node)
 			deli.remove(node)
 			# print(deli)
 			# print(picked_up[index])
+			
 			pb_theme.drop_packages(sim, picked_up[index])
 			start = node
 			time.sleep(1)
